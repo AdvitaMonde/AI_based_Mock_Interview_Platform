@@ -22,7 +22,7 @@ import FormField from "./FormField";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
-    name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
+    name: type === "signup" ? z.string().min(3) : z.string().optional(),
     email: z.string().email(),
     password: z.string().min(3),
   });
@@ -43,7 +43,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      if (type === "sign-up") {
+      if (type === "signup") {
         const { name, email, password } = data;
 
         const userCredential = await createUserWithEmailAndPassword(
@@ -65,7 +65,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
         }
 
         toast.success("Account created successfully. Please sign in.");
-        router.push("/sign-in");
+        router.push("/signin");
       } else {
         const { email, password } = data;
 
@@ -95,7 +95,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
     }
   };
 
-  const isSignIn = type === "sign-in";
+  const isSignIn = type === "signin";
 
   return (
     <div className="card-border lg:min-w-[566px]">

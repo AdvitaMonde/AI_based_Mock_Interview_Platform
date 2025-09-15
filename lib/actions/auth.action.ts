@@ -97,33 +97,78 @@ export async function signOut() {
 }
 
 // Get current user from session cookie
+// export async function getCurrentUser(): Promise<User | null> {
+//   const cookieStore = await cookies();
+
+//   const sessionCookie = cookieStore.get("session")?.value;
+//   if (!sessionCookie) return null;
+
+//   try {
+//     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+
+//     // get user info from db
+//     const userRecord = await db
+//       .collection("users")
+//       .doc(decodedClaims.uid)
+//       .get();
+//     if (!userRecord.exists) return null;
+
+//     return {
+//       ...userRecord.data(),
+//       id: userRecord.id,
+//     } as User;
+//   } catch (error) {
+//     console.log(error);
+
+//     // Invalid or expired session
+//     return null;
+//   }
+// }
+
 export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
 
+  // ✅ Debug log to check if cookies are accessible
+  console.log("DEBUG: Checking cookies for session...");
+
   const sessionCookie = cookieStore.get("session")?.value;
-  if (!sessionCookie) return null;
+  console.log("DEBUG: Session Cookie Value =>", sessionCookie);
+
+  // If no session cookie is found
+  if (!sessionCookie) {
+    console.log("DEBUG: No session cookie found. User not authenticated.");
+    return null;
+  }
 
   try {
-    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    // ✅ Debug log before verifying session
+    console.log("DEBUG: Verifying session cookie with Firebase...");
 
-    // get user info from db
-    const userRecord = await db
-      .collection("users")
-      .doc(decodedClaims.uid)
-      .get();
-    if (!userRecord.exists) return null;
+    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    console.log("DEBUG: Decoded Claims =>", decodedClaims);
+
+    // ✅ Debug log before querying Firestore
+    console.log("DEBUG: Fetching user data from Firestore for UID =>", decodedClaims.uid);
+
+    const userRecord = await db.collection("users").doc(decodedClaims.uid).get();
+
+    if (!userRecord.exists) {
+      console.log("DEBUG: User record not found in Firestore.");
+      return null;
+    }
+
+    console.log("DEBUG: User found =>", userRecord.data());
 
     return {
       ...userRecord.data(),
       id: userRecord.id,
     } as User;
   } catch (error) {
-    console.log(error);
-
-    // Invalid or expired session
+    console.error("ERROR: Failed to verify session cookie or fetch user.", error);
     return null;
   }
 }
+
 
 // Check if user is authenticated
 export async function isAuthenticated() {
